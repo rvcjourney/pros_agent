@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prospeo Lead Search</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --border: #dde1eb;
+      --border-focus: #4f6ef7;
+      --accent: #4f6ef7;
+      --accent-glow: rgba(79,110,247,0.15);
+      --accent2: #e63f7a;
+      --text: #1a1d2e;
+      --muted: #64748b;
+      --success: #14a05a;
+      --error: #d93025;
+      --tag-bg: rgba(79,110,247,0.08);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after { display: none; }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      position: relative;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 20px 20px 0 0;
+    }
+
+    /* Section label */
+    .section-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-1 { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    .section { margin-bottom: 2rem; }
+
+    /* Field */
+    .field { display: flex; flex-direction: column; gap: 0.45rem; position: relative; }
+
+    label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      color: #475569;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .required { color: var(--accent2); margin-left: 2px; }
+
+    input, select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+      width: 100%;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder { color: var(--muted); opacity: 0.6; }
+
+    input:focus, select:focus {
+      border-color: var(--border-focus);
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input.error { border-color: var(--error); }
+    input.success { border-color: var(--success); }
+
+    /* Password field */
+    .input-wrap { position: relative; }
+    .input-wrap input { padding-right: 2.8rem; }
+    .toggle-pw {
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0;
+      font-size: 1rem;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    .toggle-pw:hover { color: var(--text); }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 0.75rem 1.4rem;
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Tag input */
+    .tag-input-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      min-height: 48px;
+      cursor: text;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      align-items: center;
+    }
+
+    .tag-input-wrap:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--tag-bg);
+      border: 1px solid rgba(79,110,247,0.25);
+      border-radius: 6px;
+      padding: 0.25rem 0.6rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--accent);
+      white-space: nowrap;
+      animation: tagPop 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tag button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.15s;
+      font-family: monospace;
+      flex-shrink: 0;
+    }
+
+    .tag button:hover { color: var(--error); }
+
+    .tag-input {
+      flex: 1;
+      min-width: 140px;
+      background: none;
+      border: none;
+      padding: 0.25rem 0.25rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+      box-shadow: none !important;
+    }
+
+    .hint {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.73rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      line-height: 1.5;
+    }
+
+    /* Autocomplete dropdown */
+    .autocomplete-wrap { position: relative; }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #ffffff;
+      border: 1px solid var(--border-focus);
+      border-radius: 10px;
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: none;
+    }
+
+    .dropdown.open { display: block; }
+
+    .dropdown-item {
+      padding: 0.65rem 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text);
+    }
+
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:hover, .dropdown-item.active { background: rgba(91,91,255,0.1); color: var(--accent); }
+
+    .dropdown-item::before {
+      content: '↳';
+      color: var(--accent);
+      opacity: 0.5;
+      font-size: 0.75rem;
+    }
+
+    .dropdown-loading, .dropdown-empty {
+      padding: 0.75rem 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Count stepper */
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .stepper:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .stepper button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      padding: 0 1rem;
+      height: 48px;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .stepper button:hover { color: var(--accent); background: rgba(91,91,255,0.08); }
+
+    .stepper input {
+      border: none;
+      border-radius: 0;
+      text-align: center;
+      width: 60px;
+      flex: 1;
+      font-weight: 500;
+      box-shadow: none !important;
+    }
+
+    .stepper input:focus { box-shadow: none !important; background: var(--surface); }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .toggle-row:hover { border-color: var(--border-focus); }
+
+    .toggle-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .toggle-label span:first-child { font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 500; color: var(--text); }
+    .toggle-label span:last-child { font-family: 'Inter', sans-serif; font-size: 0.73rem; color: var(--muted); }
+
+    .switch {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 100px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    input:checked + .slider { background: var(--accent); }
+    input:checked + .slider::before { transform: translateX(18px); }
+
+    /* URL count badge */
+    .url-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .url-count strong { color: var(--accent); }
+
+    /* Submit */
+    .submit-wrap { margin-top: 2rem; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--accent), #7c5cff);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(91,91,255,0.4);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-submit .btn-text { position: relative; z-index: 1; }
+
+    .btn-shimmer {
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 2.5s infinite;
+    }
+
+    /* Status */
+    .status {
+      margin-top: 1rem;
+      padding: 0.85rem 1.1rem;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .status.success {
+      background: rgba(61,255,154,0.08);
+      border: 1px solid rgba(61,255,154,0.3);
+      color: var(--success);
+      display: flex;
+    }
+
+    .status.error {
+      background: rgba(255,91,91,0.08);
+      border: 1px solid rgba(255,91,91,0.3);
+      color: var(--error);
+      display: flex;
+    }
+
+    .status.loading {
+      background: rgba(91,91,255,0.08);
+      border: 1px solid rgba(91,91,255,0.3);
+      color: var(--accent);
+      display: flex;
+    }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes shimmer { to { left:100%; } }
+    @keyframes tagPop { from { opacity:0; transform:scale(0.7); } to { opacity:1; transform:scale(1); } }
+
+    @media (max-width: 540px) {
+      .card { padding: 1.5rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="search" onclick="switchTab('search')">Search Filters</button>
+      <button class="tab-btn" data-tab="linkedin" onclick="switchTab('linkedin')">LinkedIn Lookup</button>
+    </div>
+
+    <!-- ── Tab 1: Search Filters ── -->
+    <div class="tab-panel active" id="tab-search">
+
+      <!-- Company -->
+      <div class="section">
+        <div class="section-label">Company <span style="font-size:0.6rem;color:var(--muted);text-transform:none;letter-spacing:0">(fill Name or Website or both)</span></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Company Names</label>
+            <div class="tag-input-wrap" id="companyNameWrap" onclick="document.getElementById('companyNameInput').focus()">
+              <input class="tag-input" id="companyNameInput" placeholder="Type a name, press Enter…" autocomplete="off"/>
+            </div>
+            <p class="hint">e.g. Havells · Max 10</p>
+          </div>
+          <div class="field">
+            <label>Company Websites</label>
+            <div class="tag-input-wrap" id="websiteWrap" onclick="document.getElementById('websiteInput').focus()">
+              <input class="tag-input" id="websiteInput" placeholder="Type a domain, press Enter…" autocomplete="off"/>
+            </div>
+            <div>
+                <p class="hint">e.g. havells.com · Max 10</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- People Filters -->
+      <div class="section">
+        <div class="section-label">People Filters</div>
+        <div class="grid-1">
+
+          <!-- Designations with job-title autocomplete -->
+          <div class="field">
+            <label>Designations <span class="required">*</span></label>
+            <div class="autocomplete-wrap">
+              <div class="tag-input-wrap" id="designationWrap" onclick="document.getElementById('designationInput').focus()">
+                <input class="tag-input" id="designationInput" placeholder="Type a job title…" autocomplete="off"/>
+              </div>
+              <div class="dropdown" id="designationDropdown"></div>
+            </div>
+            <p class="hint">Suggestions from Prospeo · Press Enter or select to add · Add multiple</p>
+          </div>
+
+          <!-- Exact match toggle -->
+          <div class="field">
+            <label class="toggle-row" for="exactMatch">
+              <div class="toggle-label">
+                <span>Exact Job Title Match</span>
+                <span>When off, also matches similar titles</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="exactMatch"/>
+                <span class="slider"></span>
+              </label>
+            </label>
+          </div>
+
+          <!-- Location with autocomplete + multi-tag -->
+          <div class="field">
+            <label>Location <span class="required">*</span></label>
+            <div class="autocomplete-wrap">
+              <div class="tag-input-wrap" id="locationWrap" onclick="document.getElementById('locationInput').focus()">
+                <input class="tag-input" id="locationInput" placeholder="Type a city or country…" autocomplete="off"/>
+              </div>
+              <div class="dropdown" id="locationDropdown"></div>
+            </div>
+            <p class="hint">Select from suggestions · Add multiple locations</p>
+          </div>
+
+          <!-- Count per company -->
+          <div class="field">
+            <label>Max People per Company</label>
+            <div class="stepper">
+              <button type="button" onclick="stepCount(-1)">−</button>
+              <input type="number" id="countPerCompany" value="1" min="1" max="2"/>
+              <button type="button" onclick="stepCount(1)">+</button>
+            </div>
+            <p class="hint">Maximum 2 per company</p>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="submit-wrap">
+        <button class="btn-submit" id="submitSearchBtn" onclick="submitSearch()">
+          <span class="btn-shimmer"></span>
+          <span class="btn-text">Trigger Search</span>
+        </button>
+        <div class="status" id="statusSearch">
+          <div class="spinner" id="spinnerSearch" style="display:none"></div>
+          <span id="textSearch"></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Tab 2: LinkedIn Lookup ── -->
+    <div class="tab-panel" id="tab-linkedin">
+
+      <div class="section">
+        <div class="section-label">LinkedIn Profile URLs</div>
+        <div class="grid-1">
+
+          <div class="field">
+            <label>Profile URLs <span class="required">*</span></label>
+            <div class="tag-input-wrap" id="linkedinWrap" onclick="document.getElementById('linkedinInput').focus()">
+              <input class="tag-input" id="linkedinInput" placeholder="Paste a LinkedIn URL and press Enter…" autocomplete="off"/>
+            </div>
+
+            <p class="hint">Max 5 URLs · Paste one or more urls · e.g. linkedin.com/in/username</p>
+          </div>
+
+          <div class="url-count" id="urlCount" style="display:none">
+            <strong id="urlCountNum">0</strong> URL(s) added
+          </div>
+
+        </div>
+      </div>
+
+      <div class="submit-wrap">
+        <button class="btn-submit" id="submitLinkedinBtn" onclick="submitLinkedin()">
+          <span class="btn-shimmer"></span>
+          <span class="btn-text">Trigger LinkedIn Lookup</span>
+        </button>
+        <div class="status" id="statusLinkedin">
+          <div class="spinner" id="spinnerLinkedin" style="display:none"></div>
+          <span id="textLinkedin"></span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Tab switching ─────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === `tab-${name}`);
+    });
+  }
+
+  // ── Stepper ───────────────────────────────────────────────────
+  function stepCount(delta) {
+    const inp = document.getElementById('countPerCompany');
+    inp.value = Math.min(2, Math.max(1, parseInt(inp.value || 1) + delta));
+  }
+
+  // ── Designation tag input with job-title autocomplete ─────────
+  const tags = [];
+  const designationInput    = document.getElementById('designationInput');
+  const designationDropdown = document.getElementById('designationDropdown');
+  let jobDebounce;
+
+  designationInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = designationInput.value.trim();
+      if (val) { addTag(val); designationInput.value = ''; closeDesignationDropdown(); }
+    } else if (e.key === 'Escape') {
+      closeDesignationDropdown();
+    } else if (e.key === 'Backspace' && designationInput.value === '' && tags.length) {
+      removeTag(tags.length - 1);
+    }
+  });
+
+  designationInput.addEventListener('input', () => {
+    const q = designationInput.value.trim();
+    if (q.length < 2) { closeDesignationDropdown(); return; }
+    clearTimeout(jobDebounce);
+    jobDebounce = setTimeout(() => fetchJobTitles(q), 350);
+  });
+
+  designationInput.addEventListener('blur', () => setTimeout(closeDesignationDropdown, 200));
+
+  async function fetchJobTitles(q) {
+    designationDropdown.innerHTML = '<div class="dropdown-loading">Searching…</div>';
+    designationDropdown.classList.add('open');
+
+    try {
+      const res = await fetch('/api/search-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_title_search: q })
+      });
+      const data = await res.json();
+      const items = Array.isArray(data.job_title_suggestions) ? data.job_title_suggestions : [];
+
+      if (!items.length) { designationDropdown.innerHTML = '<div class="dropdown-empty">No suggestions</div>'; return; }
+
+      designationDropdown.innerHTML = '';
+      items.forEach(text => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item';
+        div.textContent = text;
+        div.addEventListener('mousedown', () => {
+          addTag(text);
+          designationInput.value = '';
+          closeDesignationDropdown();
+        });
+        designationDropdown.appendChild(div);
+      });
+    } catch {
+      designationDropdown.innerHTML = '<div class="dropdown-empty">Server not reachable</div>';
+    }
+  }
+
+  function closeDesignationDropdown() { designationDropdown.classList.remove('open'); }
+
+  function addTag(val) {
+    if (!val || tags.includes(val)) return;
+    tags.push(val);
+    renderTags();
+  }
+
+  function removeTag(i) {
+    tags.splice(i, 1);
+    renderTags();
+  }
+
+  function renderTags() {
+    const wrap = document.getElementById('designationWrap');
+    const input = document.getElementById('designationInput');
+    wrap.querySelectorAll('.tag').forEach(t => t.remove());
+    tags.forEach((t, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      el.innerHTML = `${t}<button onclick="removeTag(${i})" title="Remove">×</button>`;
+      wrap.insertBefore(el, input);
+    });
+  }
+
+  // ── Company Name tag input ───────────────────────────────────
+  const companyNameTags = [];
+  const companyNameInput = document.getElementById('companyNameInput');
+
+  companyNameInput.addEventListener('paste', e => {
+    e.preventDefault();
+    const lines = e.clipboardData.getData('text').split(/[\n\r,]+/).map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) { lines.forEach(addCompanyNameTag); } else { companyNameInput.value = lines[0] || ''; }
+  });
+
+  companyNameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = companyNameInput.value.trim();
+      if (val) { addCompanyNameTag(val); companyNameInput.value = ''; }
+    } else if (e.key === 'Backspace' && companyNameInput.value === '' && companyNameTags.length) {
+      removeCompanyNameTag(companyNameTags.length - 1);
+    }
+  });
+
+  function addCompanyNameTag(val) {
+    if (!val || companyNameTags.includes(val)) return;
+    if (companyNameTags.length >= 10) return;
+    companyNameTags.push(val);
+    renderCompanyNameTags();
+  }
+
+  function removeCompanyNameTag(i) {
+    companyNameTags.splice(i, 1);
+    renderCompanyNameTags();
+  }
+
+  function renderCompanyNameTags() {
+    const wrap = document.getElementById('companyNameWrap');
+    const input = document.getElementById('companyNameInput');
+    wrap.querySelectorAll('.tag').forEach(t => t.remove());
+    companyNameTags.forEach((t, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      el.innerHTML = `${t}<button onclick="removeCompanyNameTag(${i})" title="Remove">×</button>`;
+      wrap.insertBefore(el, input);
+    });
+  }
+
+  // ── Website tag input ─────────────────────────────────────────
+  const websiteTags = [];
+  const websiteInput = document.getElementById('websiteInput');
+
+  websiteInput.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text');
+    const lines = text.split(/[\n\r,]+/).map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      lines.forEach(addWebsiteTag);
+    } else {
+      websiteInput.value = lines[0] || '';
+    }
+  });
+
+  websiteInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = websiteInput.value.trim();
+      if (val) { addWebsiteTag(val); websiteInput.value = ''; }
+    } else if (e.key === 'Backspace' && websiteInput.value === '' && websiteTags.length) {
+      removeWebsiteTag(websiteTags.length - 1);
+    }
+  });
+
+  function addWebsiteTag(val) {
+    if (!val || websiteTags.includes(val)) return;
+    if (websiteTags.length >= 10) return;
+    websiteTags.push(val);
+    renderWebsiteTags();
+  }
+
+  function removeWebsiteTag(i) {
+    websiteTags.splice(i, 1);
+    renderWebsiteTags();
+  }
+
+  function renderWebsiteTags() {
+    const wrap = document.getElementById('websiteWrap');
+    const input = document.getElementById('websiteInput');
+    wrap.querySelectorAll('.tag').forEach(t => t.remove());
+    websiteTags.forEach((t, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      el.innerHTML = `${t}<button onclick="removeWebsiteTag(${i})" title="Remove">×</button>`;
+      wrap.insertBefore(el, input);
+    });
+  }
+
+  // ── Location tag input with autocomplete ─────────────────────
+  const locationTags = [];
+  const locationInput = document.getElementById('locationInput');
+  const locationDropdown = document.getElementById('locationDropdown');
+  let debounceTimer;
+
+  locationInput.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && locationInput.value === '' && locationTags.length) {
+      removeLocationTag(locationTags.length - 1);
+    }
+  });
+
+  locationInput.addEventListener('input', () => {
+    const q = locationInput.value.trim();
+    if (q.length < 3) { locationDropdown.classList.remove('open'); return; }
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fetchLocations(q), 350);
+  });
+
+  locationInput.addEventListener('blur', () => setTimeout(() => locationDropdown.classList.remove('open'), 200));
+
+  function addLocationTag(val) {
+    if (!val || locationTags.includes(val)) return;
+    locationTags.push(val);
+    renderLocationTags();
+  }
+
+  function removeLocationTag(i) {
+    locationTags.splice(i, 1);
+    renderLocationTags();
+  }
+
+  function renderLocationTags() {
+    const wrap = document.getElementById('locationWrap');
+    const input = document.getElementById('locationInput');
+    wrap.querySelectorAll('.tag').forEach(t => t.remove());
+    locationTags.forEach((t, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      el.innerHTML = `${t}<button onclick="removeLocationTag(${i})" title="Remove">×</button>`;
+      wrap.insertBefore(el, input);
+    });
+  }
+
+  async function fetchLocations(q) {
+    locationDropdown.innerHTML = '<div class="dropdown-loading">Searching…</div>';
+    locationDropdown.classList.add('open');
+
+    try {
+      const res = await fetch('/api/search-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ location_search: q })
+      });
+
+      if (!res.ok) { locationDropdown.innerHTML = `<div class="dropdown-empty">API error ${res.status}</div>`; return; }
+
+      const data = await res.json();
+      if (data.error) { locationDropdown.innerHTML = `<div class="dropdown-empty">${data.error_code || 'API error'}</div>`; return; }
+
+      const items = (Array.isArray(data.location_suggestions) ? data.location_suggestions : [])
+        .map(s => typeof s === 'string' ? s : (s.name || s.value || s.label || ''))
+        .filter(Boolean);
+
+      if (!items.length) { locationDropdown.innerHTML = `<div class="dropdown-empty">No results for "${q}"</div>`; return; }
+
+      locationDropdown.innerHTML = '';
+      items.forEach(text => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item';
+        div.textContent = text;
+        div.addEventListener('mousedown', () => {
+          addLocationTag(text);
+          locationInput.value = '';
+          locationDropdown.classList.remove('open');
+        });
+        locationDropdown.appendChild(div);
+      });
+    } catch {
+      locationDropdown.innerHTML = '<div class="dropdown-empty">Server not reachable — is npm start running?</div>';
+    }
+  }
+
+  // ── LinkedIn URL tag input ────────────────────────────────────
+  const linkedinUrls = [];
+  const linkedinInput = document.getElementById('linkedinInput');
+
+  linkedinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = linkedinInput.value.trim();
+      if (val) { addLinkedinUrl(val); linkedinInput.value = ''; }
+    } else if (e.key === 'Backspace' && linkedinInput.value === '' && linkedinUrls.length) {
+      removeLinkedinUrl(linkedinUrls.length - 1);
+    }
+  });
+
+  // Paste multiple URLs at once (newline or comma separated)
+  linkedinInput.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text');
+    const lines = text.split(/[\n\r,]+/).map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      lines.forEach(addLinkedinUrl);
+    } else {
+      linkedinInput.value = lines[0] || '';
+    }
+  });
+
+  function addLinkedinUrl(raw) {
+    let url = raw.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    if (!url.includes('linkedin.com')) return;
+    if (linkedinUrls.includes(url)) return;
+    if (linkedinUrls.length >= 5) return;
+    linkedinUrls.push(url);
+    renderLinkedinTags();
+  }
+
+  function removeLinkedinUrl(i) {
+    linkedinUrls.splice(i, 1);
+    renderLinkedinTags();
+  }
+
+  function renderLinkedinTags() {
+    const wrap = document.getElementById('linkedinWrap');
+    const input = document.getElementById('linkedinInput');
+    wrap.querySelectorAll('.tag').forEach(t => t.remove());
+    linkedinUrls.forEach((url, i) => {
+      const el = document.createElement('span');
+      el.className = 'tag';
+      const slug = url.replace(/https?:\/\/(www\.)?linkedin\.com\/in\//i, '').replace(/\/$/, '');
+      el.innerHTML = `↗ ${slug}<button onclick="removeLinkedinUrl(${i})" title="Remove">×</button>`;
+      wrap.insertBefore(el, input);
+    });
+    const countEl = document.getElementById('urlCount');
+    const countNum = document.getElementById('urlCountNum');
+    countEl.style.display = linkedinUrls.length ? 'flex' : 'none';
+    countNum.textContent = linkedinUrls.length;
+  }
+
+  // ── Submit: Search Filters ────────────────────────────────────
+  async function submitSearch() {
+    const pendingTag = designationInput.value.trim();
+    if (pendingTag) { addTag(pendingTag); designationInput.value = ''; }
+
+    const pendingWeb = websiteInput.value.trim();
+    if (pendingWeb) { addWebsiteTag(pendingWeb); websiteInput.value = ''; }
+
+    const pendingName = companyNameInput.value.trim();
+    if (pendingName) { addCompanyNameTag(pendingName); companyNameInput.value = ''; }
+
+    const exactMatch = document.getElementById('exactMatch').checked;
+    const count      = parseInt(document.getElementById('countPerCompany').value) || 2;
+
+    if (!tags.length)         return showStatus('search', 'error', 'Add at least one designation.');
+    if (!locationTags.length) return showStatus('search', 'error', 'Add at least one location.');
+
+    const prospeoPayload = { page: 1, filters: {} };
+
+    if (companyNameTags.length || websiteTags.length) {
+      prospeoPayload.filters.company = {};
+      if (companyNameTags.length) prospeoPayload.filters.company.names    = { include: companyNameTags };
+      if (websiteTags.length)     prospeoPayload.filters.company.websites = { include: websiteTags };
+    }
+
+    prospeoPayload.filters.person_job_title       = { include: tags, match_only_exact_job_titles: exactMatch };
+    prospeoPayload.filters.person_location_search = { include: locationTags };
+    prospeoPayload.filters.max_person_per_company = count;
+
+    showStatus('search', 'loading', 'Sending to n8n…');
+    document.getElementById('submitSearchBtn').disabled = true;
+
+    try {
+      const res = await fetch('/api/submit-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prospeo_payload: prospeoPayload,
+          meta: {
+            submitted_at: new Date().toISOString(),
+            company_names: companyNameTags,
+            company_websites: websiteTags,
+            designations: tags,
+            locations: locationTags,
+            exact_match: exactMatch,
+            count_per_company: count
+          }
+        })
+      });
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        if (!isJson) {
+          const blob = await res.blob();
+          const disposition = res.headers.get('content-disposition') || '';
+          const nameMatch = disposition.match(/filename[^;=\n]*=(['"]?)([^\n;'"]+)\1/);
+          const filename = nameMatch ? nameMatch[2].trim() : 'leads.xlsx';
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showStatus('search', 'success', `✓ "${filename}" downloaded!`);
+        } else {
+          showStatus('search', 'success', '✓ Sent! n8n is processing your search.');
+        }
+      } else {
+        showStatus('search', 'error', `Server error ${res.status}. Check config.json.`);
+      }
+    } catch {
+      showStatus('search', 'error', 'Failed to reach server. Is npm start running?');
+    }
+
+    document.getElementById('submitSearchBtn').disabled = false;
+  }
+
+  // ── Submit: LinkedIn Lookup ───────────────────────────────────
+  async function submitLinkedin() {
+    const pending = linkedinInput.value.trim();
+    if (pending) { addLinkedinUrl(pending); linkedinInput.value = ''; }
+
+    if (!linkedinUrls.length) return showStatus('linkedin', 'error', 'Add at least one LinkedIn URL.');
+
+    showStatus('linkedin', 'loading', `Sending ${linkedinUrls.length} URL(s) to n8n…`);
+    document.getElementById('submitLinkedinBtn').disabled = true;
+
+    try {
+      const res = await fetch('/api/submit-linkedin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          linkedin_urls: linkedinUrls,
+          meta: { submitted_at: new Date().toISOString(), count: linkedinUrls.length }
+        })
+      });
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        if (!isJson) {
+          const blob = await res.blob();
+          const disposition = res.headers.get('content-disposition') || '';
+          const nameMatch = disposition.match(/filename[^;=\n]*=(['"]?)([^\n;'"]+)\1/);
+          const filename = nameMatch ? nameMatch[2].trim() : 'linkedin-leads.xlsx';
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = filename;
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showStatus('linkedin', 'success', `✓ "${filename}" downloaded!`);
+        } else {
+          showStatus('linkedin', 'success', `✓ Sent ${linkedinUrls.length} URL(s) to n8n successfully!`);
+        }
+      } else {
+        showStatus('linkedin', 'error', `Server error ${res.status}. Check config.json.`);
+      }
+    } catch {
+      showStatus('linkedin', 'error', 'Failed to reach n8n. Check the webhook URL.');
+    }
+
+    document.getElementById('submitLinkedinBtn').disabled = false;
+  }
+
+  // ── Shared status helper ──────────────────────────────────────
+  function showStatus(tab, type, msg) {
+    const box     = document.getElementById(`status${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    const spinner = document.getElementById(`spinner${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    const text    = document.getElementById(`text${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    box.className = `status ${type}`;
+    spinner.style.display = type === 'loading' ? 'block' : 'none';
+    text.textContent = msg;
+  }
+</script>
+</body>
+</html>
