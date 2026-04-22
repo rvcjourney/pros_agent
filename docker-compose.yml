@@ -13,3 +13,12 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - prospeo-net
+
+networks:
+  prospeo-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
